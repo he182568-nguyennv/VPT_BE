@@ -1,5 +1,6 @@
 package Controller;
 import Model.User;
+import Model.Role;
 import com.google.gson.Gson;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,9 +16,11 @@ import java.io.IOException;
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
 
+
             // 2. Logic nghiệp vụ (Chỉ tập trung vào việc tạo data)
+            Role role = new Role(1,"admin","who can CRUD user");
             User user = new User("HE182568", "Nguyen van Nguyen",1,22,
-                    "Yen Noi Dong Quang Quoc Oai Ha Noi","nguyena7k580","30042004aA");
+                    "Yen Noi Dong Quang Quoc Oai Ha Noi","nguyena7k580","30042004aA",role);
             String json = new Gson().toJson(user);
 
             // 3. Trả về
