@@ -2,7 +2,7 @@ package Controller;
 
 import Dao.ReportDAO;
 import Model.Report;
-import Model.User;
+import Utils.JsonUtil;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -16,17 +16,13 @@ public class ReportServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
-        User user = (User) req.getSession().getAttribute("currentUser");
-        if (user == null) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            resp.getWriter().write("{\"success\":false,\"message\":\"Chưa đăng nhập\"}");
-            return;
-        }
+        int userId = (int) req.getAttribute("jwtUserId");
+        int roleId = (int) req.getAttribute("jwtRoleId");
 
         try {
-            List<Report> reports = (user.getRoleId() == 1)
+            List<Report> reports = (roleId == 1)
                     ? reportDAO.findPending()
-                    : reportDAO.findByReporter(user.getId());
+                    : reportDAO.findByReporter(userId);
 
             StringBuilder sb = new StringBuilder("{\"success\":true,\"data\":[");
             for (int i = 0; i < reports.size(); i++) {
@@ -37,12 +33,12 @@ public class ReportServlet extends HttpServlet {
                         .append("\"reporterId\":").append(r.getReporterId()).append(",")
                         .append("\"vehicleId\":").append(r.getVehicleId()).append(",")
                         .append("\"sessionId\":").append(r.getSessionId()).append(",")
-                        .append("\"reporterName\":\"").append(safe(r.getReporterName())).append("\",")
-                        .append("\"reporterPhone\":\"").append(safe(r.getReporterPhone())).append("\",")
-                        .append("\"reportType\":\"").append(safe(r.getReportType())).append("\",")
-                        .append("\"notes\":\"").append(safe(r.getNotes())).append("\",")
-                        .append("\"status\":\"").append(safe(r.getStatus())).append("\",")
-                        .append("\"createdAt\":\"").append(safe(r.getCreatedAt())).append("\"")
+                        .append("\"reporterName\":\"").append(JsonUtil.escape(r.getReporterName())).append("\",")
+                        .append("\"reporterPhone\":\"").append(JsonUtil.escape(r.getReporterPhone())).append("\",")
+                        .append("\"reportType\":\"").append(JsonUtil.escape(r.getReportType())).append("\",")
+                        .append("\"notes\":\"").append(JsonUtil.escape(r.getNotes())).append("\",")
+                        .append("\"status\":\"").append(JsonUtil.escape(r.getStatus())).append("\",")
+                        .append("\"createdAt\":\"").append(JsonUtil.escape(r.getCreatedAt())).append("\"")
                         .append("}");
             }
             sb.append("]}");
@@ -50,7 +46,7 @@ public class ReportServlet extends HttpServlet {
             resp.getWriter().write(sb.toString());
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"success\":false,\"message\":\"" + e.getMessage() + "\"}");
+            resp.getWriter().write("{\"success\":false,\"message\":\"" + JsonUtil.escape(e.getMessage()) + "\"}");
         }
     }
 
@@ -58,40 +54,41 @@ public class ReportServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
-        User user = (User) req.getSession().getAttribute("currentUser");
-        if (user == null) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            resp.getWriter().write("{\"success\":false,\"message\":\"Chưa đăng nhập\"}");
-            return;
-        }
+        int userId = (int) req.getAttribute("jwtUserId");
+        int roleId = (int) req.getAttribute("jwtRoleId");
 
-        String action = req.getParameter("action");
         try {
+            String body   = JsonUtil.readBody(req);
+            String action = JsonUtil.getString(body, "action");
+
             if ("create".equals(action)) {
                 Report r = new Report();
-                r.setReporterId(user.getId());
-                r.setVehicleId(Integer.parseInt(req.getParameter("vehicleId")));
-                r.setSessionId(Integer.parseInt(req.getParameter("sessionId")));
-                r.setReportType(req.getParameter("reportType"));
-                r.setReporterName(user.getFullName());
-                r.setReporterPhone(user.getPhone());
-                r.setNotes(req.getParameter("notes"));
+                r.setReporterId(userId);
+                r.setVehicleId(JsonUtil.getInt(body, "vehicleId", 0));
+                r.setSessionId(JsonUtil.getInt(body, "sessionId", 0));
+                r.setReportType(JsonUtil.getString(body, "reportType"));
+                r.setNotes(JsonUtil.getString(body, "notes"));
                 int id = reportDAO.insert(r);
                 resp.setStatus(HttpServletResponse.SC_CREATED);
                 resp.getWriter().write("{\"success\":true,\"reportId\":" + id + ",\"status\":\"pending\"}");
 
             } else if ("approve".equals(action)) {
-                if (user.getRoleId() != 1) {
+                if (roleId != 1) {
                     resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     resp.getWriter().write("{\"success\":false,\"message\":\"Chỉ manager mới được duyệt\"}");
                     return;
                 }
-                int reportId  = Integer.parseInt(req.getParameter("reportId"));
-                String decision = req.getParameter("decision");
-                String note     = req.getParameter("note");
-                reportDAO.approve(reportId, user.getId(), decision, note);
+                int    reportId = JsonUtil.getInt(body, "reportId", -1);
+                String decision = JsonUtil.getString(body, "decision");
+                String note     = JsonUtil.getString(body, "note");
+                if (reportId < 0 || decision == null) {
+                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    resp.getWriter().write("{\"success\":false,\"message\":\"Thiếu reportId hoặc decision\"}");
+                    return;
+                }
+                reportDAO.approve(reportId, userId, decision, note);
                 resp.setStatus(HttpServletResponse.SC_OK);
-                resp.getWriter().write("{\"success\":true,\"reportId\":" + reportId + ",\"decision\":\"" + decision + "\"}");
+                resp.getWriter().write("{\"success\":true,\"reportId\":" + reportId + ",\"decision\":\"" + JsonUtil.escape(decision) + "\"}");
 
             } else {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -99,9 +96,7 @@ public class ReportServlet extends HttpServlet {
             }
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"success\":false,\"message\":\"" + e.getMessage() + "\"}");
+            resp.getWriter().write("{\"success\":false,\"message\":\"" + JsonUtil.escape(e.getMessage()) + "\"}");
         }
     }
-
-    private String safe(String s) { return s == null ? "" : s.replace("\"", "\\\""); }
 }

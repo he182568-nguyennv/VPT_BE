@@ -3,6 +3,8 @@ package Controller;
 
 import Dao.UserDAO;
 import Model.User;
+import Utils.JsonUtil;
+import Utils.JwtUtil;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -18,20 +20,27 @@ public class LoginServlet extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
 
-        String username = req.getParameter("username");
-        String password = req.getParameter("password");
+        String body     = JsonUtil.readBody(req);
+        String username = JsonUtil.getString(body, "username");
+        String password = JsonUtil.getString(body, "password");
+
+        if (username == null || password == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("{\"success\":false,\"message\":\"Thiếu username hoặc password\"}");
+            return;
+        }
 
         try {
             User user = userDAO.findByUsername(username);
             if (user != null && user.isActive() && checkPassword(password, user.getPasswordHash())) {
-                HttpSession session = req.getSession();
-                session.setAttribute("currentUser", user);
+                String token = JwtUtil.generateToken(user.getId(), user.getUsername(), user.getRoleId());
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.getWriter().write(
                         "{\"success\":true," +
+                                "\"token\":\"" + token + "\"," +
                                 "\"userId\":" + user.getId() + "," +
-                                "\"username\":\"" + user.getUsername() + "\"," +
-                                "\"fullName\":\"" + user.getFullName() + "\"," +
+                                "\"username\":\"" + JsonUtil.escape(user.getUsername()) + "\"," +
+                                "\"fullName\":\"" + JsonUtil.escape(user.getFullName()) + "\"," +
                                 "\"roleId\":" + user.getRoleId() + "," +
                                 "\"role\":\"" + getRoleName(user.getRoleId()) + "\"}"
                 );
@@ -41,7 +50,7 @@ public class LoginServlet extends HttpServlet {
             }
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"success\":false,\"message\":\"Lỗi server: " + e.getMessage() + "\"}");
+            resp.getWriter().write("{\"success\":false,\"message\":\"Lỗi server\"}");
         }
     }
 

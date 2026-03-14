@@ -2,7 +2,7 @@ package Controller;
 
 import Dao.ParkingSessionDAO;
 import Model.ParkingSession;
-import Model.User;
+import Utils.JsonUtil;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -17,23 +17,31 @@ public class CheckInServlet extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
 
-        User staff = (User) req.getSession().getAttribute("currentUser");
-        if (staff == null || staff.getRoleId() != 2) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            resp.getWriter().write("{\"success\":false,\"message\":\"Không có quyền truy cập\"}");
+        int roleId = (int) req.getAttribute("jwtRoleId");
+        int staffId = (int) req.getAttribute("jwtUserId");
+        if (roleId != 2) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write("{\"success\":false,\"message\":\"Chỉ staff mới được check-in\"}");
             return;
         }
 
-        String plateNumber = req.getParameter("plateNumber");
-        int lotId   = Integer.parseInt(req.getParameter("lotId"));
-        int cardId  = Integer.parseInt(req.getParameter("cardId"));
-        String imgIn = req.getParameter("vehicleImgIn");
-
         try {
+            String body        = JsonUtil.readBody(req);
+            String plateNumber = JsonUtil.getString(body, "plateNumber");
+            int    lotId       = JsonUtil.getInt(body, "lotId", -1);
+            int    cardId      = JsonUtil.getInt(body, "cardId", -1);
+            String imgIn       = JsonUtil.getString(body, "vehicleImgIn");
+
+            if (plateNumber == null || lotId < 0 || cardId < 0) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write("{\"success\":false,\"message\":\"Thiếu plateNumber, lotId hoặc cardId\"}");
+                return;
+            }
+
             ParkingSession existing = sessionDAO.findActiveByPlate(plateNumber);
             if (existing != null) {
                 resp.setStatus(HttpServletResponse.SC_CONFLICT);
-                resp.getWriter().write("{\"success\":false,\"message\":\"Xe " + plateNumber + " đang trong bãi rồi\"}");
+                resp.getWriter().write("{\"success\":false,\"message\":\"Xe " + JsonUtil.escape(plateNumber) + " đang trong bãi rồi\"}");
                 return;
             }
 
@@ -41,7 +49,7 @@ public class CheckInServlet extends HttpServlet {
             s.setPlateNumber(plateNumber);
             s.setLotId(lotId);
             s.setCardId(cardId);
-            s.setStaffCheckinId(staff.getId());
+            s.setStaffCheckinId(staffId);
             s.setVehicleImgIn(imgIn);
 
             int sid = sessionDAO.checkIn(s);
@@ -49,16 +57,16 @@ public class CheckInServlet extends HttpServlet {
             resp.getWriter().write(
                     "{\"success\":true," +
                             "\"sessionId\":" + sid + "," +
-                            "\"plateNumber\":\"" + plateNumber + "\"," +
+                            "\"plateNumber\":\"" + JsonUtil.escape(plateNumber) + "\"," +
                             "\"lotId\":" + lotId + "," +
                             "\"cardId\":" + cardId + "," +
-                            "\"staffCheckinId\":" + staff.getId() + "," +
+                            "\"staffCheckinId\":" + staffId + "," +
                             "\"checkinTime\":\"" + java.time.LocalDateTime.now() + "\"," +
                             "\"status\":\"active\"}"
             );
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"success\":false,\"message\":\"Lỗi server: " + e.getMessage() + "\"}");
+            resp.getWriter().write("{\"success\":false,\"message\":\"Lỗi server: " + JsonUtil.escape(e.getMessage()) + "\"}");
         }
     }
 }
