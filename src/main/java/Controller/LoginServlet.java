@@ -9,29 +9,48 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.security.MessageDigest;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
     private final UserDAO userDAO = new UserDAO();
 
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
 
-        String body     = JsonUtil.readBody(req);
-        String username = JsonUtil.getString(body, "username");
-        String password = JsonUtil.getString(body, "password");
-
-        if (username == null || password == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"success\":false,\"message\":\"Thiếu username hoặc password\"}");
-            return;
-        }
-
+        String username = null;
+        String password = null;
+        System.out.println("[DB] user.dir = " + System.getProperty("user.dir"));
         try {
+            String contentType = req.getContentType();
+            System.out.println("[LOGIN] Content-Type: " + contentType);
+
+            if (contentType != null && contentType.contains("application/json")) {
+                String body = req.getReader().lines().collect(java.util.stream.Collectors.joining());
+                JsonObject json = JsonParser.parseString(body).getAsJsonObject();
+                username = json.get("username").getAsString();
+                password = json.get("password").getAsString();
+            } else {
+                username = req.getParameter("username");
+                password = req.getParameter("password");
+            }
+
+            System.out.println("[LOGIN] username=" + username + " password=" + (password != null ? "***" : "null"));
+
+            if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write("{\"success\":false,\"message\":\"Thiếu username hoặc password\"}");
+                return;
+            }
+
             User user = userDAO.findByUsername(username);
+            System.out.println("[LOGIN] User found: " + (user != null ? user.getUsername() : "null"));
+
             if (user != null && user.isActive() && checkPassword(password, user.getPasswordHash())) {
                 String token = JwtUtil.generateToken(user.getId(), user.getUsername(), user.getRoleId());
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -48,9 +67,13 @@ public class LoginServlet extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 resp.getWriter().write("{\"success\":false,\"message\":\"Sai tên đăng nhập hoặc mật khẩu\"}");
             }
+
         } catch (Exception e) {
+            // In toàn bộ stack trace ra console để debug
+            System.err.println("[LOGIN] ERROR: " + e.getMessage());
+            e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"success\":false,\"message\":\"Lỗi server\"}");
+            resp.getWriter().write("{\"success\":false,\"message\":\"Lỗi server: " + JsonUtil.escape(e.getMessage()) + "\"}");
         }
     }
 
@@ -60,7 +83,10 @@ public class LoginServlet extends HttpServlet {
             byte[] bytes = md.digest(raw.getBytes());
             StringBuilder sb = new StringBuilder();
             for (byte b : bytes) sb.append(String.format("%02x", b));
-            return sb.toString().equals(hash);
+            String computed = sb.toString();
+            System.out.println("[LOGIN] computed hash: " + computed);
+            System.out.println("[LOGIN] stored  hash: " + hash);
+            return computed.equals(hash);
         } catch (Exception e) { return false; }
     }
 
