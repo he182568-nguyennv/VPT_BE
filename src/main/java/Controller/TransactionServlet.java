@@ -1,6 +1,5 @@
 package Controller;
 
-
 import Dao.TransactionDAO;
 import Model.Transaction;
 import Utils.JsonUtil;
@@ -17,14 +16,14 @@ public class TransactionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
-        int roleId = (int) req.getAttribute("jwtRoleId");
-        int userId = (int) req.getAttribute("jwtUserId");
-
+        Object uid = req.getAttribute("jwtUserId");
+        Object rid = req.getAttribute("jwtRoleId");
+        if (uid == null) { resp.setStatus(401); resp.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}"); return; }
+        int userId = (int) uid;
+        int roleId = (int) rid;
         try {
             List<Transaction> list;
-
             if (roleId == 1) {
-                // Manager: tất cả hoặc filter theo lotId/ngày
                 String lotParam  = req.getParameter("lotId");
                 String fromParam = req.getParameter("from");
                 String toParam   = req.getParameter("to");
@@ -35,43 +34,30 @@ public class TransactionServlet extends HttpServlet {
                     list = dao.findAll();
                 }
             } else if (roleId == 2) {
-                // Staff: giao dịch trong ca hôm nay
                 list = dao.findByStaff(userId);
             } else if (roleId == 3) {
-                // Customer: lịch sử của chính mình qua sessionId
                 list = dao.findByUser(userId);
             } else {
-                resp.setStatus(403);
-                resp.getWriter().write("{\"success\":false,\"message\":\"Forbidden\"}");
-                return;
+                resp.setStatus(403); resp.getWriter().write("{\"success\":false,\"message\":\"Forbidden\"}"); return;
             }
-
             StringBuilder sb = new StringBuilder("{\"success\":true,\"data\":[");
             for (int i = 0; i < list.size(); i++) {
                 if (i > 0) sb.append(",");
-                sb.append(toJson(list.get(i)));
+                Transaction t = list.get(i);
+                sb.append("{\"transId\":").append(t.getTransId())
+                  .append(",\"sessionId\":").append(t.getSessionId())
+                  .append(",\"amount\":").append(t.getAmount())
+                  .append(",\"discountAmount\":").append(t.getDiscountAmount())
+                  .append(",\"paymentMethod\":\"").append(JsonUtil.escape(t.getPaymentMethod())).append("\"")
+                  .append(",\"feeType\":\"").append(JsonUtil.escape(t.getFeeType())).append("\"")
+                  .append(",\"paymentStatus\":\"").append(JsonUtil.escape(t.getPaymentStatus())).append("\"")
+                  .append(",\"createdAt\":\"").append(JsonUtil.escape(t.getCreatedAt())).append("\"")
+                  .append("}");
             }
             sb.append("]}");
-            resp.setStatus(200);
-            resp.getWriter().write(sb.toString());
-
+            resp.setStatus(200); resp.getWriter().write(sb.toString());
         } catch (Exception e) {
-            resp.setStatus(500);
-            resp.getWriter().write("{\"success\":false,\"message\":\"" +
-                JsonUtil.escape(e.getMessage()) + "\"}");
+            resp.setStatus(500); resp.getWriter().write("{\"success\":false,\"message\":\"" + JsonUtil.escape(e.getMessage()) + "\"}");
         }
-    }
-
-    private String toJson(Transaction t) {
-        return "{" +
-            "\"transId\":"         + t.getTransId()                              + "," +
-            "\"sessionId\":"       + t.getSessionId()                            + "," +
-            "\"amount\":"          + t.getAmount()                               + "," +
-            "\"discountAmount\":"  + t.getDiscountAmount()                       + "," +
-            "\"paymentMethod\":\"" + JsonUtil.escape(t.getPaymentMethod())       + "\"," +
-            "\"feeType\":\""       + JsonUtil.escape(t.getFeeType())             + "\"," +
-            "\"paymentStatus\":\"" + JsonUtil.escape(t.getPaymentStatus())       + "\"," +
-            "\"createdAt\":\""     + JsonUtil.escape(t.getCreatedAt())           + "\"" +
-            "}";
     }
 }

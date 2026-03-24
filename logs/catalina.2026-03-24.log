@@ -1,0 +1,87 @@
+24-Mar-2026 10:11:45.514 INFO [Thread-1] org.apache.coyote.AbstractProtocol.pause Pausing ProtocolHandler ["http-nio-8080"]
+24-Mar-2026 10:11:45.516 INFO [Thread-1] org.apache.catalina.core.StandardService.stopInternal Stopping service [Catalina]
+24-Mar-2026 10:11:45.524 WARNING [Thread-1] org.apache.catalina.loader.WebappClassLoaderBase.clearReferencesJdbc The web application [api] registered the JDBC driver [org.sqlite.JDBC] but failed to unregister it when the web application was stopped. To prevent a memory leak, the JDBC Driver has been forcibly unregistered.
+24-Mar-2026 10:11:45.533 INFO [Thread-1] org.apache.coyote.AbstractProtocol.stop Stopping ProtocolHandler ["http-nio-8080"]
+24-Mar-2026 10:11:45.539 INFO [Thread-1] org.apache.coyote.AbstractProtocol.destroy Destroying ProtocolHandler ["http-nio-8080"]
+24-Mar-2026 10:15:14.327 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Server version name:   Apache Tomcat/10.1.52
+24-Mar-2026 10:15:14.332 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Server built:          Jan 23 2026 19:29:07 UTC
+24-Mar-2026 10:15:14.333 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Server version number: 10.1.52.0
+24-Mar-2026 10:15:14.333 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log OS Name:               Linux
+24-Mar-2026 10:15:14.333 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log OS Version:            6.17.0-14-generic
+24-Mar-2026 10:15:14.333 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Architecture:          amd64
+24-Mar-2026 10:15:14.334 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Java Home:             /usr/lib/jvm/java-21-openjdk-amd64
+24-Mar-2026 10:15:14.334 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log JVM Version:           21.0.10+7-Ubuntu-124.04
+24-Mar-2026 10:15:14.334 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log JVM Vendor:            Ubuntu
+24-Mar-2026 10:15:14.334 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log CATALINA_BASE:         /media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW
+24-Mar-2026 10:15:14.335 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log CATALINA_HOME:         /home/van-nguyen/tomcat/apache-tomcat-10.1.52
+24-Mar-2026 10:15:14.341 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: --add-opens=java.base/java.lang=ALL-UNNAMED
+24-Mar-2026 10:15:14.341 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: --add-opens=java.base/java.io=ALL-UNNAMED
+24-Mar-2026 10:15:14.342 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: --add-opens=java.base/java.util=ALL-UNNAMED
+24-Mar-2026 10:15:14.342 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+24-Mar-2026 10:15:14.342 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: --add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED
+24-Mar-2026 10:15:14.342 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dvpt.db.path=/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/db_swd.sqlite
+24-Mar-2026 10:15:14.342 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dcatalina.home=/home/van-nguyen/tomcat/apache-tomcat-10.1.52
+24-Mar-2026 10:15:14.342 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dcatalina.base=/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW
+24-Mar-2026 10:15:14.343 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Djava.io.tmpdir=/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/temp
+24-Mar-2026 10:15:14.343 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Djava.util.logging.config.file=/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/conf/logging.properties
+24-Mar-2026 10:15:14.343 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager
+24-Mar-2026 10:15:14.343 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -javaagent:/snap/intellij-idea/50/lib/idea_rt.jar=39167
+24-Mar-2026 10:15:14.343 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dfile.encoding=UTF-8
+24-Mar-2026 10:15:14.344 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dsun.stdout.encoding=UTF-8
+24-Mar-2026 10:15:14.344 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dsun.stderr.encoding=UTF-8
+24-Mar-2026 10:15:14.346 INFO [main] org.apache.catalina.core.AprLifecycleListener.lifecycleEvent The Apache Tomcat Native library which allows using OpenSSL was not found on the java.library.path: [/usr/java/packages/lib:/usr/lib/x86_64-linux-gnu/jni:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/usr/lib/jni:/lib:/usr/lib]
+24-Mar-2026 10:15:14.619 INFO [main] org.apache.coyote.AbstractProtocol.init Initializing ProtocolHandler ["http-nio-8080"]
+24-Mar-2026 10:15:14.632 INFO [main] org.apache.catalina.startup.Catalina.load Server initialization in [512] milliseconds
+24-Mar-2026 10:15:14.667 INFO [main] org.apache.catalina.core.StandardService.startInternal Starting service [Catalina]
+24-Mar-2026 10:15:14.668 INFO [main] org.apache.catalina.core.StandardEngine.startInternal Starting Servlet engine: [Apache Tomcat/10.1.52]
+24-Mar-2026 10:15:14.675 INFO [main] org.apache.catalina.startup.HostConfig.deployDescriptor Deploying deployment descriptor [/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/conf/Catalina/localhost/api.xml]
+24-Mar-2026 10:15:15.008 INFO [main] org.apache.jasper.servlet.TldScanner.scanJars At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+24-Mar-2026 10:15:15.030 INFO [main] org.apache.catalina.startup.HostConfig.deployDescriptor Deployment of deployment descriptor [/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/conf/Catalina/localhost/api.xml] has finished in [354] ms
+24-Mar-2026 10:15:15.031 INFO [main] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive [/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/webapps/demo-servlet.war]
+24-Mar-2026 10:15:15.097 INFO [main] org.apache.jasper.servlet.TldScanner.scanJars At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+24-Mar-2026 10:15:15.099 INFO [main] org.apache.catalina.startup.HostConfig.deployWAR Deployment of web application archive [/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/webapps/demo-servlet.war] has finished in [68] ms
+24-Mar-2026 10:15:15.102 INFO [main] org.apache.coyote.AbstractProtocol.start Starting ProtocolHandler ["http-nio-8080"]
+24-Mar-2026 10:15:15.111 INFO [main] org.apache.catalina.startup.Catalina.start Server startup in [478] milliseconds
+24-Mar-2026 10:25:15.449 INFO [Thread-1] org.apache.coyote.AbstractProtocol.pause Pausing ProtocolHandler ["http-nio-8080"]
+24-Mar-2026 10:25:15.451 INFO [Thread-1] org.apache.catalina.core.StandardService.stopInternal Stopping service [Catalina]
+24-Mar-2026 10:25:15.464 INFO [Thread-1] org.apache.coyote.AbstractProtocol.stop Stopping ProtocolHandler ["http-nio-8080"]
+24-Mar-2026 10:25:15.475 INFO [Thread-1] org.apache.coyote.AbstractProtocol.destroy Destroying ProtocolHandler ["http-nio-8080"]
+24-Mar-2026 10:25:57.493 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Server version name:   Apache Tomcat/10.1.52
+24-Mar-2026 10:25:57.500 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Server built:          Jan 23 2026 19:29:07 UTC
+24-Mar-2026 10:25:57.500 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Server version number: 10.1.52.0
+24-Mar-2026 10:25:57.500 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log OS Name:               Linux
+24-Mar-2026 10:25:57.500 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log OS Version:            6.17.0-14-generic
+24-Mar-2026 10:25:57.500 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Architecture:          amd64
+24-Mar-2026 10:25:57.500 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Java Home:             /usr/lib/jvm/java-21-openjdk-amd64
+24-Mar-2026 10:25:57.500 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log JVM Version:           21.0.10+7-Ubuntu-124.04
+24-Mar-2026 10:25:57.501 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log JVM Vendor:            Ubuntu
+24-Mar-2026 10:25:57.501 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log CATALINA_BASE:         /media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW
+24-Mar-2026 10:25:57.501 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log CATALINA_HOME:         /home/van-nguyen/tomcat/apache-tomcat-10.1.52
+24-Mar-2026 10:25:57.507 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: --add-opens=java.base/java.lang=ALL-UNNAMED
+24-Mar-2026 10:25:57.508 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: --add-opens=java.base/java.io=ALL-UNNAMED
+24-Mar-2026 10:25:57.508 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: --add-opens=java.base/java.util=ALL-UNNAMED
+24-Mar-2026 10:25:57.508 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+24-Mar-2026 10:25:57.508 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: --add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED
+24-Mar-2026 10:25:57.508 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dvpt.db.path=/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/db_swd.sqlite
+24-Mar-2026 10:25:57.508 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dcatalina.home=/home/van-nguyen/tomcat/apache-tomcat-10.1.52
+24-Mar-2026 10:25:57.508 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dcatalina.base=/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW
+24-Mar-2026 10:25:57.508 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Djava.io.tmpdir=/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/temp
+24-Mar-2026 10:25:57.509 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Djava.util.logging.config.file=/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/conf/logging.properties
+24-Mar-2026 10:25:57.509 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager
+24-Mar-2026 10:25:57.509 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -javaagent:/snap/intellij-idea/50/lib/idea_rt.jar=43811
+24-Mar-2026 10:25:57.509 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dfile.encoding=UTF-8
+24-Mar-2026 10:25:57.509 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dsun.stdout.encoding=UTF-8
+24-Mar-2026 10:25:57.509 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: -Dsun.stderr.encoding=UTF-8
+24-Mar-2026 10:25:57.511 INFO [main] org.apache.catalina.core.AprLifecycleListener.lifecycleEvent The Apache Tomcat Native library which allows using OpenSSL was not found on the java.library.path: [/usr/java/packages/lib:/usr/lib/x86_64-linux-gnu/jni:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/usr/lib/jni:/lib:/usr/lib]
+24-Mar-2026 10:25:57.765 INFO [main] org.apache.coyote.AbstractProtocol.init Initializing ProtocolHandler ["http-nio-8080"]
+24-Mar-2026 10:25:57.788 INFO [main] org.apache.catalina.startup.Catalina.load Server initialization in [471] milliseconds
+24-Mar-2026 10:25:57.829 INFO [main] org.apache.catalina.core.StandardService.startInternal Starting service [Catalina]
+24-Mar-2026 10:25:57.830 INFO [main] org.apache.catalina.core.StandardEngine.startInternal Starting Servlet engine: [Apache Tomcat/10.1.52]
+24-Mar-2026 10:25:57.837 INFO [main] org.apache.catalina.startup.HostConfig.deployDescriptor Deploying deployment descriptor [/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/conf/Catalina/localhost/api.xml]
+24-Mar-2026 10:25:58.180 INFO [main] org.apache.jasper.servlet.TldScanner.scanJars At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+24-Mar-2026 10:25:58.202 INFO [main] org.apache.catalina.startup.HostConfig.deployDescriptor Deployment of deployment descriptor [/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/conf/Catalina/localhost/api.xml] has finished in [364] ms
+24-Mar-2026 10:25:58.203 INFO [main] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive [/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/webapps/demo-servlet.war]
+24-Mar-2026 10:25:58.276 INFO [main] org.apache.jasper.servlet.TldScanner.scanJars At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+24-Mar-2026 10:25:58.278 INFO [main] org.apache.catalina.startup.HostConfig.deployWAR Deployment of web application archive [/media/van-nguyen/Ubuntu-2/Code/group-project/SWD_G5_NEW/webapps/demo-servlet.war] has finished in [74] ms
+24-Mar-2026 10:25:58.281 INFO [main] org.apache.coyote.AbstractProtocol.start Starting ProtocolHandler ["http-nio-8080"]
+24-Mar-2026 10:25:58.288 INFO [main] org.apache.catalina.startup.Catalina.start Server startup in [498] milliseconds

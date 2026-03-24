@@ -1,6 +1,5 @@
 package Controller;
 
-
 import Dao.MembershipDAO;
 import Model.Membership;
 import Model.MembershipPlan;
@@ -8,26 +7,32 @@ import Utils.JsonUtil;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @WebServlet("/customer/membership")
 public class MembershipServlet extends HttpServlet {
 
-    private final MembershipDAO membershipDAO = new MembershipDAO();
+    private final MembershipDAO dao = new MembershipDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
-        int userId = (int) req.getAttribute("jwtUserId");
-        int roleId = (int) req.getAttribute("jwtRoleId");
-        if (roleId != 3) { resp.setStatus(403); resp.getWriter().write("{\"success\":false,\"message\":\"Forbidden\"}"); return; }
-
+        Object uid = req.getAttribute("jwtUserId");
+        Object rid = req.getAttribute("jwtRoleId");
+        if (uid == null) { resp.setStatus(401); resp.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}"); return; }
+        int userId = (int) uid;
+        int roleId = (int) rid;
+        if (roleId != 3 && roleId != 1) { resp.setStatus(403); resp.getWriter().write("{\"success\":false,\"message\":\"Forbidden\"}"); return; }
+        if (roleId == 1) {
+            String p = req.getParameter("userId");
+            if (p != null && !p.isBlank()) try { userId = Integer.parseInt(p); } catch (Exception ignored) {}
+        }
         try {
-            List<MembershipPlan> plans   = membershipDAO.findAllPlans();
-            Membership activeMembership  = membershipDAO.findActiveByUser(userId);
-            List<Membership> history     = membershipDAO.findByUser(userId);
+            List<MembershipPlan> plans = dao.findAllPlans();
+            Membership active          = dao.findActiveByUser(userId);
 
-            // Plans JSON
             StringBuilder plansJson = new StringBuilder("[");
             for (int i = 0; i < plans.size(); i++) {
                 MembershipPlan p = plans.get(i);
@@ -42,24 +47,22 @@ public class MembershipServlet extends HttpServlet {
             }
             plansJson.append("]");
 
-            // Active membership JSON
             String activeJson = "null";
-            if (activeMembership != null) {
-                activeJson = "{" +
-                    "\"membershipId\":" + activeMembership.getMembershipId() + "," +
-                    "\"planId\":"       + activeMembership.getPlanId()       + "," +
-                    "\"startDate\":\""  + activeMembership.getStartDate()    + "\"," +
-                    "\"endDate\":\""    + activeMembership.getEndDate()      + "\"," +
-                    "\"status\":\""     + activeMembership.getStatus()       + "\"" +
-                    "}";
+            if (active != null) {
+                long daysLeft = 0;
+                try { daysLeft = Math.max(0, ChronoUnit.DAYS.between(LocalDate.now(), LocalDate.parse(active.getEndDate()))); } catch (Exception ignored) {}
+                MembershipPlan plan = dao.getPlanById(active.getPlanId());
+                String planName = plan != null ? plan.getName() : "";
+                activeJson = "{\"membershipId\":" + active.getMembershipId()
+                    + ",\"planId\":"     + active.getPlanId()
+                    + ",\"planName\":\"" + JsonUtil.escape(planName) + "\""
+                    + ",\"startDate\":\"" + JsonUtil.escape(active.getStartDate()) + "\""
+                    + ",\"endDate\":\""  + JsonUtil.escape(active.getEndDate())   + "\""
+                    + ",\"status\":\""   + JsonUtil.escape(active.getStatus())    + "\""
+                    + ",\"daysLeft\":"   + daysLeft + "}";
             }
-
             resp.setStatus(200);
-            resp.getWriter().write(
-                "{\"success\":true," +
-                "\"plans\":"  + plansJson + "," +
-                "\"active\":" + activeJson + "}"
-            );
+            resp.getWriter().write("{\"success\":true,\"plans\":" + plansJson + ",\"active\":" + activeJson + "}");
         } catch (Exception e) {
             resp.setStatus(500); resp.getWriter().write("{\"success\":false,\"message\":\"" + JsonUtil.escape(e.getMessage()) + "\"}");
         }
@@ -69,23 +72,21 @@ public class MembershipServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
-        int userId = (int) req.getAttribute("jwtUserId");
-        int roleId = (int) req.getAttribute("jwtRoleId");
-        if (roleId != 3) { resp.setStatus(403); resp.getWriter().write("{\"success\":false,\"message\":\"Forbidden\"}"); return; }
-
+        Object uid = req.getAttribute("jwtUserId");
+        Object rid = req.getAttribute("jwtRoleId");
+        if (uid == null) { resp.setStatus(401); resp.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}"); return; }
+        int userId = (int) uid;
+        if ((int) rid != 3) { resp.setStatus(403); resp.getWriter().write("{\"success\":false,\"message\":\"Chỉ customer mới được đăng ký\"}"); return; }
         try {
-            String body  = JsonUtil.readBody(req);
-            int planId   = JsonUtil.getInt(body, "planId", -1);
-            if (planId < 0) {
-                resp.setStatus(400); resp.getWriter().write("{\"success\":false,\"message\":\"Missing planId\"}"); return;
-            }
-            // Check no active membership
-            Membership existing = membershipDAO.findActiveByUser(userId);
-            if (existing != null) {
-                resp.setStatus(409); resp.getWriter().write("{\"success\":false,\"message\":\"Bạn đang có gói thành viên active\"}"); return;
-            }
-            int newId = membershipDAO.register(userId, planId);
-            resp.setStatus(201); resp.getWriter().write("{\"success\":true,\"membershipId\":" + newId + "}");
+            String body = JsonUtil.readBody(req);
+            int planId  = JsonUtil.getInt(body, "planId", -1);
+            if (planId < 0) { resp.setStatus(400); resp.getWriter().write("{\"success\":false,\"message\":\"Thiếu planId\"}"); return; }
+            Membership ex = dao.findActiveByUser(userId);
+            if (ex != null) { resp.setStatus(409); resp.getWriter().write("{\"success\":false,\"message\":\"Đang có gói active đến " + ex.getEndDate() + "\"}"); return; }
+            int newId = dao.register(userId, planId);
+            if (newId < 0) { resp.setStatus(400); resp.getWriter().write("{\"success\":false,\"message\":\"Gói không tồn tại\"}"); return; }
+            resp.setStatus(201);
+            resp.getWriter().write("{\"success\":true,\"membershipId\":" + newId + "}");
         } catch (Exception e) {
             resp.setStatus(500); resp.getWriter().write("{\"success\":false,\"message\":\"" + JsonUtil.escape(e.getMessage()) + "\"}");
         }

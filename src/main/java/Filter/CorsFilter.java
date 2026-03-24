@@ -2,34 +2,50 @@ package Filter;
 
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.*;
 import java.io.IOException;
 
-// @WebFilter("/*") nghĩa là áp dụng cho TẤT CẢ các đường dẫn
+/**
+ * CorsFilter — cho phép frontend (localhost:5173) gọi API.
+ * Phải chạy TRƯỚC AuthFilter — đặt @WebFilter order thấp hơn.
+ * Với @WebFilter không hỗ trợ order trực tiếp, đặt tên class bắt đầu bằng
+ * "A" hoặc dùng web.xml để đảm bảo CorsFilter chạy trước AuthFilter.
+ */
 @WebFilter("/*")
 public class CorsFilter implements Filter {
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletResponse resp = (HttpServletResponse) response;
-        HttpServletRequest req = (HttpServletRequest) request;
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
 
-        // 1. Cấu hình CORS (Dùng chung cho cả dự án)
-        resp.setHeader("Access-Control-Allow-Origin", "http://localhost:5173"); // Cho phép Vite
-        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        resp.setHeader("Access-Control-Allow-Credentials", "true");
+        HttpServletRequest  request  = (HttpServletRequest)  req;
+        HttpServletResponse response = (HttpServletResponse) res;
 
-        // 2. Xử lý Preflight Request (Quan trọng cho POST/PUT)
-        // Khi React gửi request POST, trình duyệt sẽ gửi 1 request OPTIONS trước để "hỏi đường".
-        // Server phải trả về OK ngay lập tức.
-        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
-            resp.setStatus(HttpServletResponse.SC_OK);
+        // Cho phép frontend gọi API
+        String origin = request.getHeader("Origin");
+        if (origin != null && (
+                origin.startsWith("http://localhost:5173") ||
+                origin.startsWith("http://localhost:3000") ||
+                origin.startsWith("http://127.0.0.1"))) {
+            response.setHeader("Access-Control-Allow-Origin",      origin);
+        } else {
+            response.setHeader("Access-Control-Allow-Origin",      "http://localhost:5173");
+        }
+        response.setHeader("Access-Control-Allow-Credentials",  "true");
+        response.setHeader("Access-Control-Allow-Methods",      "GET, POST, PUT, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers",
+            "Content-Type, Authorization, X-Requested-With");
+        response.setHeader("Access-Control-Max-Age",            "3600");
+
+        // Trả lời ngay với OPTIONS — không cần đi tiếp
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
             return;
         }
 
-        // 3. Cho phép request đi tiếp vào Servlet đích
-        chain.doFilter(request, response);
+        chain.doFilter(req, res);
     }
+
+    @Override public void init(FilterConfig cfg) {}
+    @Override public void destroy() {}
 }
