@@ -1,6 +1,5 @@
 package Dao;
 
-
 import Model.Membership;
 import Model.MembershipPlan;
 import Utils.DBConnection;
@@ -36,18 +35,37 @@ public class MembershipDAO {
         List<MembershipPlan> list = new ArrayList<>();
         try (Connection c = DBConnection.getConnection();
              Statement st = c.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM membership_plans WHERE is_active=1 ORDER BY duration_days")) {
+             ResultSet rs = st.executeQuery(
+                     "SELECT * FROM membership_plans WHERE is_active=1 ORDER BY duration_days")) {
             while (rs.next()) list.add(mapPlan(rs));
         }
         return list;
     }
 
+    // Tìm theo userId — dùng khi cần check membership của user đang login
     public Membership findActiveByUser(int userId) throws SQLException {
-        String sql = "SELECT * FROM memberships WHERE user_id=? AND status='active' AND end_date >= date('now') LIMIT 1";
+        String sql = "SELECT * FROM memberships " +
+                "WHERE user_id=? AND status='active' AND end_date >= date('now') LIMIT 1";
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            try (ResultSet rs = ps.executeQuery()) { return rs.next() ? mapMembership(rs) : null; }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapMembership(rs) : null;
+            }
+        }
+    }
+
+    // FIX #3: Thêm method tìm theo membershipId — dùng trong CheckOutServlet.calcFee()
+    // vì parking_sessions lưu membership_id, không phải user_id
+    public Membership findById(int membershipId) throws SQLException {
+        String sql = "SELECT * FROM memberships " +
+                "WHERE membership_id=? AND status='active' AND end_date >= date('now')";
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, membershipId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapMembership(rs) : null;
+            }
         }
     }
 
@@ -57,7 +75,9 @@ public class MembershipDAO {
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            try (ResultSet rs = ps.executeQuery()) { while (rs.next()) list.add(mapMembership(rs)); }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapMembership(rs));
+            }
         }
         return list;
     }
@@ -67,13 +87,18 @@ public class MembershipDAO {
         if (plan == null) return -1;
         String startDate = java.time.LocalDate.now().toString();
         String endDate   = java.time.LocalDate.now().plusDays(plan.getDurationDays()).toString();
-        String sql = "INSERT INTO memberships(user_id,plan_id,start_date,end_date,status) VALUES(?,?,?,?,'active')";
+        String sql = "INSERT INTO memberships(user_id,plan_id,start_date,end_date,status) " +
+                "VALUES(?,?,?,?,'active')";
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1,userId); ps.setInt(2,planId);
-            ps.setString(3,startDate); ps.setString(4,endDate);
+            ps.setInt(1, userId);
+            ps.setInt(2, planId);
+            ps.setString(3, startDate);
+            ps.setString(4, endDate);
             ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) { return rs.next() ? rs.getInt(1) : -1; }
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                return rs.next() ? rs.getInt(1) : -1;
+            }
         }
     }
 
@@ -82,7 +107,9 @@ public class MembershipDAO {
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, planId);
-            try (ResultSet rs = ps.executeQuery()) { return rs.next() ? mapPlan(rs) : null; }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapPlan(rs) : null;
+            }
         }
     }
 

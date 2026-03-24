@@ -9,7 +9,7 @@ import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/manager/lots")
+@WebServlet("/staff/lots")
 public class ParkingLotServlet extends HttpServlet {
 
     private final ParkingLotDAO lotDAO = new ParkingLotDAO();
@@ -28,7 +28,7 @@ public class ParkingLotServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
         int role = (int) req.getAttribute("jwtRoleId");
-        if (role != 1) { resp.setStatus(403); resp.getWriter().write("{\"success\":false,\"message\":\"Forbidden\"}"); return; }
+        if (role != 1 && role != 2) { resp.setStatus(403); resp.getWriter().write("{\"success\":false,\"message\":\"Forbidden\"}"); return; }
         try {
             List<ParkingLot> lots = lotDAO.findAll();
             StringBuilder sb = new StringBuilder("{\"success\":true,\"data\":[");

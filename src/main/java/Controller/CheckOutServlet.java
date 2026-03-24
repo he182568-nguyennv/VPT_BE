@@ -14,35 +14,45 @@ public class CheckOutServlet extends HttpServlet {
 
     private final ParkingSessionDAO sessionDAO     = new ParkingSessionDAO();
     private final TransactionDAO    transactionDAO = new TransactionDAO();
-    private final PricingRuleDAO pricingDAO     = new PricingRuleDAO();
-    private final MembershipDAO membershipDAO  = new MembershipDAO();
-    private final VehicleDAO vehicleDAO     = new VehicleDAO();
+    private final PricingRuleDAO    pricingDAO     = new PricingRuleDAO();
+    private final MembershipDAO     membershipDAO  = new MembershipDAO();
+    private final VehicleDAO        vehicleDAO     = new VehicleDAO();
 
     private static final DateTimeFormatter FMT =
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /** GET /staff/checkout?plate=30A-12345 — xem trước phí */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
-        int roleId = (int) req.getAttribute("jwtRoleId");
+
+        // FIX #4: null-check trước khi cast
+        Object roleAttr = req.getAttribute("jwtRoleId");
+        if (roleAttr == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}");
+            return;
+        }
+        int roleId = (int) roleAttr;
         if (roleId != 1 && roleId != 2) {
             resp.setStatus(403);
             resp.getWriter().write("{\"success\":false,\"message\":\"Forbidden\"}");
             return;
         }
+
         String plate = req.getParameter("plate");
         if (plate == null || plate.isBlank()) {
             resp.setStatus(400);
             resp.getWriter().write("{\"success\":false,\"message\":\"Thiếu biển số xe\"}");
             return;
         }
+
         try {
             ParkingSession session = sessionDAO.findActiveByPlate(plate.trim().toUpperCase());
             if (session == null) {
                 resp.setStatus(404);
                 resp.getWriter().write("{\"success\":false,\"message\":\"Không tìm thấy xe " +
-                    JsonUtil.escape(plate) + " đang gửi trong bãi\"}");
+                        JsonUtil.escape(plate) + " đang gửi trong bãi\"}");
                 return;
             }
             FeeResult fee = calcFee(session);
@@ -51,7 +61,7 @@ public class CheckOutServlet extends HttpServlet {
         } catch (Exception e) {
             resp.setStatus(500);
             resp.getWriter().write("{\"success\":false,\"message\":\"" +
-                JsonUtil.escape(e.getMessage()) + "\"}");
+                    JsonUtil.escape(e.getMessage()) + "\"}");
         }
     }
 
@@ -60,37 +70,56 @@ public class CheckOutServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
-        int roleId  = (int) req.getAttribute("jwtRoleId");
-        int staffId = (int) req.getAttribute("jwtUserId");
+
+        // FIX #4: null-check trước khi cast
+        Object roleAttr = req.getAttribute("jwtRoleId");
+        Object userAttr = req.getAttribute("jwtUserId");
+        if (roleAttr == null || userAttr == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}");
+            return;
+        }
+
+        int roleId  = (int) roleAttr;
+        int staffId = (int) userAttr;
+
         if (roleId != 2) {
             resp.setStatus(403);
             resp.getWriter().write("{\"success\":false,\"message\":\"Chỉ nhân viên mới được check-out\"}");
             return;
         }
+
         try {
             String body          = JsonUtil.readBody(req);
             String plateNumber   = JsonUtil.getString(body, "plateNumber");
             String paymentMethod = JsonUtil.getString(body, "paymentMethod");
             String imgOut        = JsonUtil.getString(body, "vehicleImgOut");
 
-            if (plateNumber == null || paymentMethod == null) {
+            if (plateNumber == null || plateNumber.isBlank() || paymentMethod == null) {
                 resp.setStatus(400);
                 resp.getWriter().write("{\"success\":false,\"message\":\"Thiếu plateNumber hoặc paymentMethod\"}");
                 return;
             }
 
-            ParkingSession session = sessionDAO.findActiveByPlate(plateNumber.trim().toUpperCase());
+            plateNumber = plateNumber.trim().toUpperCase();
+
+            ParkingSession session = sessionDAO.findActiveByPlate(plateNumber);
             if (session == null) {
                 resp.setStatus(404);
                 resp.getWriter().write("{\"success\":false,\"message\":\"Không tìm thấy xe " +
-                    JsonUtil.escape(plateNumber) + " đang gửi trong bãi\"}");
+                        JsonUtil.escape(plateNumber) + " đang gửi trong bãi\"}");
                 return;
             }
 
             FeeResult fee = calcFee(session);
 
             // 1. Cập nhật session → completed
-            sessionDAO.checkOut(session.getSessionId(), staffId, imgOut != null ? imgOut : "");
+            boolean updated = sessionDAO.checkOut(session.getSessionId(), staffId, imgOut != null ? imgOut : "");
+            if (!updated) {
+                resp.setStatus(409);
+                resp.getWriter().write("{\"success\":false,\"message\":\"Session đã được checkout rồi\"}");
+                return;
+            }
 
             // 2. Tạo transaction
             Transaction t = new Transaction();
@@ -107,21 +136,21 @@ public class CheckOutServlet extends HttpServlet {
 
             resp.setStatus(200);
             resp.getWriter().write(
-                "{\"success\":true," +
-                "\"transId\":"         + transId                                      + "," +
-                "\"sessionId\":"       + session.getSessionId()                       + "," +
-                "\"plateNumber\":\""   + JsonUtil.escape(plateNumber)                 + "\"," +
-                "\"durationMinutes\":" + fee.durationMinutes                          + "," +
-                "\"baseFee\":"         + fee.baseFee                                  + "," +
-                "\"discountAmount\":"  + fee.discountAmount                           + "," +
-                "\"finalFee\":"        + fee.finalFee                                 + "," +
-                "\"paymentMethod\":\"" + JsonUtil.escape(paymentMethod)               + "\"," +
-                "\"feeType\":\""       + JsonUtil.escape(fee.feeType)                 + "\"}"
+                    "{\"success\":true,"          +
+                            "\"transId\":"                + transId                               + "," +
+                            "\"sessionId\":"              + session.getSessionId()               + "," +
+                            "\"plateNumber\":\""          + JsonUtil.escape(plateNumber)         + "\"," +
+                            "\"durationMinutes\":"        + fee.durationMinutes                  + "," +
+                            "\"baseFee\":"                + fee.baseFee                          + "," +
+                            "\"discountAmount\":"         + fee.discountAmount                   + "," +
+                            "\"finalFee\":"               + fee.finalFee                         + "," +
+                            "\"paymentMethod\":\""        + JsonUtil.escape(paymentMethod)       + "\"," +
+                            "\"feeType\":\""              + JsonUtil.escape(fee.feeType)         + "\"}"
             );
         } catch (Exception e) {
             resp.setStatus(500);
             resp.getWriter().write("{\"success\":false,\"message\":\"" +
-                JsonUtil.escape(e.getMessage()) + "\"}");
+                    JsonUtil.escape(e.getMessage()) + "\"}");
         }
     }
 
@@ -164,17 +193,18 @@ public class CheckOutServlet extends HttpServlet {
         }
 
         // Base fee
-        int blocks  = (int) Math.ceil((double) r.durationMinutes / blockMinutes);
-        r.baseFee   = Math.min(blocks * pricePerBlock, maxDailyFee);
+        int blocks = (int) Math.ceil((double) r.durationMinutes / blockMinutes);
+        r.baseFee  = Math.min(blocks * pricePerBlock, maxDailyFee);
 
-        // Membership discount (session.membershipId links to memberships.membership_id)
+        // FIX #3: Dùng findById(membershipId) thay vì findActiveByUser(membershipId)
+        // session.getMembershipId() là ID của bản ghi membership, không phải userId
         if (session.getMembershipId() > 0) {
-            Membership m = membershipDAO.findActiveByUser(session.getMembershipId());
+            Membership m = membershipDAO.findById(session.getMembershipId());
             if (m != null) {
-                double discPct    = membershipDAO.getPlanDiscountPct(m.getPlanId());
-                r.discountPct     = discPct;
-                r.discountAmount  = Math.round(r.baseFee * discPct / 100.0);
-                r.hasMembership   = true;
+                double discPct   = membershipDAO.getPlanDiscountPct(m.getPlanId());
+                r.discountPct    = discPct;
+                r.discountAmount = Math.round(r.baseFee * discPct / 100.0);
+                r.hasMembership  = true;
             }
         }
         r.finalFee = Math.round(r.baseFee - r.discountAmount);
@@ -182,18 +212,18 @@ public class CheckOutServlet extends HttpServlet {
     }
 
     private String feeJson(ParkingSession s, FeeResult fee) {
-        return "{\"success\":true," +
-            "\"sessionId\":"       + s.getSessionId()                       + "," +
-            "\"plateNumber\":\""   + JsonUtil.escape(s.getPlateNumber())    + "\"," +
-            "\"lotId\":"           + s.getLotId()                           + "," +
-            "\"checkinTime\":\""   + JsonUtil.escape(s.getCheckinTime())    + "\"," +
-            "\"durationMinutes\":" + fee.durationMinutes                    + "," +
-            "\"feeType\":\""       + JsonUtil.escape(fee.feeType)           + "\"," +
-            "\"baseFee\":"         + fee.baseFee                            + "," +
-            "\"discountPct\":"     + fee.discountPct                        + "," +
-            "\"discountAmount\":"  + fee.discountAmount                     + "," +
-            "\"hasMembership\":"   + fee.hasMembership                      + "," +
-            "\"finalFee\":"        + fee.finalFee                           + "}";
+        return "{\"success\":true,"          +
+                "\"sessionId\":"                 + s.getSessionId()                     + "," +
+                "\"plateNumber\":\""             + JsonUtil.escape(s.getPlateNumber())  + "\"," +
+                "\"lotId\":"                     + s.getLotId()                         + "," +
+                "\"checkinTime\":\""             + JsonUtil.escape(s.getCheckinTime())  + "\"," +
+                "\"durationMinutes\":"           + fee.durationMinutes                  + "," +
+                "\"feeType\":\""                 + JsonUtil.escape(fee.feeType)         + "\"," +
+                "\"baseFee\":"                   + fee.baseFee                          + "," +
+                "\"discountPct\":"               + fee.discountPct                      + "," +
+                "\"discountAmount\":"            + fee.discountAmount                   + "," +
+                "\"hasMembership\":"             + fee.hasMembership                    + "," +
+                "\"finalFee\":"                  + fee.finalFee                         + "}";
     }
 
     static class FeeResult {
