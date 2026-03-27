@@ -42,7 +42,9 @@ Open IntellIj -> Settings -> Plugins -> Install Smart Tomcat
 
 ### Install SQLite 
 Download here: https://sqlite.org/download.html 
+
 or you can watch this video: https://www.youtube.com/watch?v=FsiyOAkC0P4 (windows) - using bash command 
+
 https://www.youtube.com/watch?v=o8d38cGb7vY&t=144s   - using DbBrowser for SQLite
 
 
