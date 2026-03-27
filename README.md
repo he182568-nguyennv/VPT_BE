@@ -38,4 +38,12 @@ Open IntellIj -> Settings -> Plugins -> Install Smart Tomcat
 * Value of Tomcat server is your path of tomcat server u just install
 * Deployment directory should be ends with "demo-servlet/src/main/webapp"
 * Context path : should be ends with /api
-* That's all -> OK   
+* That's all -> OK
+
+### Install SQLite 
+Download here: https://sqlite.org/download.html 
+or you can watch this video: https://www.youtube.com/watch?v=FsiyOAkC0P4 (windows) - using bash command 
+https://www.youtube.com/watch?v=o8d38cGb7vY&t=144s   - using DbBrowser for SQLite
+
+
+
